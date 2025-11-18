@@ -74,7 +74,6 @@ public class DownloadController {
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + version.getFileName() + "\"")
                     .body(resource);
-
         } catch (Exception e) {
             throw new NoSuchElementException("Error during file loading: " + e.getMessage());
         }
