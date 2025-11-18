@@ -2,12 +2,16 @@ package com.pedrorok.rpm.services;
 
 import com.pedrorok.rpm.dto.TexturepackDTO;
 import com.pedrorok.rpm.dto.TexturepackVersionDTO;
+import com.pedrorok.rpm.dto.UploadResponseDTO;
 import com.pedrorok.rpm.entity.Texturepack;
 import com.pedrorok.rpm.entity.TexturepackVersion;
+import com.pedrorok.rpm.exception.StorageServiceException;
 import com.pedrorok.rpm.repository.TexturepackRepository;
 import com.pedrorok.rpm.repository.TexturepackVersionRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -79,6 +83,64 @@ public class TexturepackService {
                 .isLatest(version.getIsLatest())
                 .createdAt(version.getCreatedAt())
                 .downloadUrl("/api/download/" + version.getTexturepack().getSlug())
+                .build();
+    }
+
+    @Transactional
+    public TexturepackDTO createTexturepack(TexturepackDTO dto) {
+        if (texturepackRepository.existsBySlug(dto.getSlug())) {
+            throw new StorageServiceException("Texturepack with slug already exists: " + dto.getSlug());
+        }
+
+        Texturepack texturepack = Texturepack.builder()
+                .name(dto.getName())
+                .slug(dto.getSlug())
+                .authorName(dto.getAuthorName())
+                .downloadCount(0L)
+                .isActive(true)
+                .build();
+
+        Texturepack saved = texturepackRepository.save(texturepack);
+        return convertToDTO(saved);
+    }
+
+    @Transactional
+    public UploadResponseDTO uploadVersion(String slug, String version, String changelog, MultipartFile file) {
+        Texturepack texturepack = texturepackRepository.findBySlug(slug)
+                .orElseThrow(() -> new NoSuchElementException("Texturepack not found: " + slug));
+
+        if (!versionService.isValidVersion(version)) {
+            throw new StorageServiceException("Invalid version: " + version + ". Must follow semantic versioning (e.g., 1.0.0)");
+        }
+
+        if (versionRepository.existsByTextureIdAndVersion(texturepack.getId(), version)) {
+            throw new StorageServiceException("This version already exists for texturepack: " + version);
+        }
+
+        String filePath = fileStorageService.storeFile(file, slug, version);
+        long fileSize = fileStorageService.getFileSize(file);
+
+        versionRepository.unmarkAllAsLatest(texturepack.getId());
+
+        TexturepackVersion newVersion = TexturepackVersion.builder()
+                .texturepack(texturepack)
+                .version(version)
+                .fileName(file.getOriginalFilename())
+                .filePath(filePath)
+                .fileSize(fileSize)
+                .changelog(changelog)
+                .isLatest(true)
+                .build();
+
+        TexturepackVersion saved = versionRepository.save(newVersion);
+
+        return UploadResponseDTO.builder()
+                .success(true)
+                .message("Upload successful")
+                .texturepackId(texturepack.getId())
+                .versionId(saved.getId())
+                .version(version)
+                .downloadUrl("/api/download/" + slug)
                 .build();
     }
 }
