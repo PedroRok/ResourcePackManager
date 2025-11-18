@@ -21,8 +21,8 @@ public class JwtTokenProvider {
     private final long jwtExpiration;
 
     public JwtTokenProvider(
-            @Value("${JWT_SECRET:this-is-a-very-big-source-secret-key-ill-definitely-change-this-but-not-now}") String secret,
-            @Value("${JWT_EXPIRATION:86400000}") long jwtExpiration) {
+            @Value("${app.security.jwt.secret}") String secret,
+            @Value("${app.security.jwt.expiration:86400000}") long jwtExpiration) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.jwtExpiration = jwtExpiration;
     }
