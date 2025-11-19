@@ -35,7 +35,7 @@ public class DownloadController {
     public ResponseEntity<Resource> downloadLatest(@PathVariable String slug) {
         var texturepack = texturepackRepository.findBySlug(slug).orElseThrow(() -> new NoSuchElementException("Resource not found: " + slug));
 
-        TexturepackVersion latestVersion = versionRepository.findByTextureIdAndIsLatestTrue(texturepack.getId()).orElseThrow(() -> new NoSuchElementException("Resource not found: " + slug));
+        TexturepackVersion latestVersion = versionRepository.findByTexturepackIdAndIsLatestTrue(texturepack.getId()).orElseThrow(() -> new NoSuchElementException("Resource not found: " + slug));
 
         // todo: increment download count
 
@@ -50,7 +50,7 @@ public class DownloadController {
                 .orElseThrow(() -> new NoSuchElementException("Resource not found: " + slug));
 
         TexturepackVersion requestedVersion = versionRepository
-                .findByTextureIdOrderByCreatedAtDesc(texturepack.getId())
+                .findByTexturepackIdOrderByCreatedAtDesc(texturepack.getId())
                 .stream()
                 .filter(ver -> ver.getVersion().equals(version))
                 .findFirst()

@@ -15,13 +15,13 @@ import java.util.Optional;
  */
 @Repository
 public interface TexturepackVersionRepository extends JpaRepository<TexturepackVersion, Long> {
-    List<TexturepackVersion> findByTextureIdOrderByCreatedAtDesc(Long textureId);
+    List<TexturepackVersion> findByTexturepackIdOrderByCreatedAtDesc(Long textureId);
 
-    Optional<TexturepackVersion> findByTextureIdAndIsLatestTrue(Long textureId);
+    Optional<TexturepackVersion> findByTexturepackIdAndIsLatestTrue(Long textureId);
 
     @Modifying
     @Query("UPDATE TexturepackVersion ver SET ver.isLatest = false WHERE ver.texturepack.id = :textureId")
     void unmarkAllAsLatest(Long textureId);
 
-    boolean existsByTextureIdAndVersion(Long textureId, String version);
+    boolean existsByTexturepackIdAndVersion(Long textureId, String version);
 }

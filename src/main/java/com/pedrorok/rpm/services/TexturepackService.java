@@ -45,7 +45,7 @@ public class TexturepackService {
 
     private TexturepackDTO convertToDTO(Texturepack texturepack) {
         TexturepackVersionDTO latestVersion = versionRepository
-                .findByTextureIdAndIsLatestTrue(texturepack.getId())
+                .findByTexturepackIdAndIsLatestTrue(texturepack.getId())
                 .map(this::convertVersionToDTO)
                 .orElse(null);
 
@@ -65,7 +65,7 @@ public class TexturepackService {
     private TexturepackDTO convertToFullDTO(Texturepack texturepack) {
         TexturepackDTO dto = convertToDTO(texturepack);
         List<TexturepackVersionDTO> versions = versionRepository
-                .findByTextureIdOrderByCreatedAtDesc(texturepack.getId())
+                .findByTexturepackIdOrderByCreatedAtDesc(texturepack.getId())
                 .stream()
                 .map(this::convertVersionToDTO)
                 .collect(Collectors.toList());
@@ -113,7 +113,7 @@ public class TexturepackService {
             throw new StorageServiceException("Invalid version: " + version + ". Must follow semantic versioning (e.g., 1.0.0)");
         }
 
-        if (versionRepository.existsByTextureIdAndVersion(texturepack.getId(), version)) {
+        if (versionRepository.existsByTexturepackIdAndVersion(texturepack.getId(), version)) {
             throw new StorageServiceException("This version already exists for texturepack: " + version);
         }
 
